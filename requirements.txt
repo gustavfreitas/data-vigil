@@ -1,0 +1,42 @@
+# ==========================================================================
+# requirements.txt — data-vigil
+# Versões testadas e validadas de ponta a ponta (os 4 notebooks rodaram
+# sem erro com exatamente estas versões). Organizado por ordem de
+# importância: se precisar instalar manualmente por partes, siga a ordem
+# de cima para baixo — o topo é indispensável, o final é dispensável.
+#
+# Kernel Python usado nos testes: Python 3.12.3
+# (o ambiente Windows original do projeto usa Python 3.14 — funciona,
+# mas veja a nota sobre versão do Python no SETUP.md antes de instalar)
+# ==========================================================================
+
+# --- Tier 1 · Núcleo indispensável (manipulação de dados) ---
+pandas==3.0.2
+numpy==2.4.4
+
+# --- Tier 2 · Machine learning (essencial para 03_modelagem e 04_avaliacao) ---
+scikit-learn==1.8.0
+xgboost==3.4.1
+
+# --- Tier 3 · Balanceamento de classes (documentado no notebook; o
+#     pipeline final usa scale_pos_weight, mas SMOTE/undersampling
+#     seguem como referência conceitual) ---
+imbalanced-learn==0.14.2
+
+# --- Tier 4 · Visualização (necessário para todos os gráficos dos notebooks) ---
+matplotlib==3.10.8
+seaborn==0.13.2
+
+# --- Tier 5 · Explicabilidade (necessário só em 04_avaliacao, célula SHAP) ---
+shap==0.52.0
+
+# --- Tier 6 · Ambiente de notebook (necessário para abrir/rodar os .ipynb) ---
+jupyter==1.0.0
+ipykernel==7.3.0
+nbformat==5.11.1
+
+# --- Tier 7 · Opcional / conveniência (nenhum notebook depende disso;
+#     útil só para exportar relatórios ou rodar via linha de comando,
+#     ex. jupyter nbconvert --execute) ---
+nbconvert==7.17.1
+nbclient==0.10.2
