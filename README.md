@@ -107,6 +107,3 @@ API de transações (própria/simulada) → ETL em Python → PostgreSQL (bronze
 
 Gustavo Freitas — [LinkedIn](https://www.linkedin.com/in/gs-freitas/) · [Portfólio](https://portfolio-tawny-one-99.vercel.app/)
 
-## Licença
-
-MIT
