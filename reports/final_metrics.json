@@ -105,5 +105,67 @@
     "CRITICAL": 110,
     "MEDIUM": 7,
     "HIGH": 4
-  }
+  },
+  "sensitivity": [
+    {
+      "review_cost": 1.0,
+      "threshold_cost": 0.0001088988792616874,
+      "alerts": 1994,
+      "frauds_caught": 127,
+      "precision": 0.06369107321965897,
+      "recall": 0.8943661971830986,
+      "cost_at_cost_threshold": 4148.629999999999,
+      "cost_at_f1_threshold": 4056.67,
+      "cost_flag_nothing": 19877.880000000005,
+      "saving_vs_nothing": 0.7912941420312428
+    },
+    {
+      "review_cost": 5.0,
+      "threshold_cost": 0.186989888548851,
+      "alerts": 127,
+      "frauds_caught": 109,
+      "precision": 0.8582677165354331,
+      "recall": 0.7676056338028169,
+      "cost_at_cost_threshold": 4567.879999999999,
+      "cost_at_f1_threshold": 4536.67,
+      "cost_flag_nothing": 19877.880000000005,
+      "saving_vs_nothing": 0.7702028586549472
+    },
+    {
+      "review_cost": 25.0,
+      "threshold_cost": 0.6381188035011292,
+      "alerts": 115,
+      "frauds_caught": 108,
+      "precision": 0.9391304347826087,
+      "recall": 0.7605633802816901,
+      "cost_at_cost_threshold": 6811.67,
+      "cost_at_f1_threshold": 6936.67,
+      "cost_flag_nothing": 19877.880000000005,
+      "saving_vs_nothing": 0.6573241210833349
+    },
+    {
+      "review_cost": 100.0,
+      "threshold_cost": 0.999998927116394,
+      "alerts": 21,
+      "frauds_caught": 21,
+      "precision": 1.0,
+      "recall": 0.14788732394366197,
+      "cost_at_cost_threshold": 20393.25,
+      "cost_at_f1_threshold": 15936.67,
+      "cost_flag_nothing": 19877.880000000005,
+      "saving_vs_nothing": -0.02592680909634204
+    },
+    {
+      "review_cost": 500.0,
+      "threshold_cost": 0.9999998807907106,
+      "alerts": 3,
+      "frauds_caught": 3,
+      "precision": 1.0,
+      "recall": 0.02112676056338028,
+      "cost_at_cost_threshold": 20948.160000000003,
+      "cost_at_f1_threshold": 63936.67,
+      "cost_flag_nothing": 19877.880000000005,
+      "saving_vs_nothing": -0.053842763916474023
+    }
+  ]
 }

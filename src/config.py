@@ -17,6 +17,9 @@ TARGET = "Class"
 # custa o valor da própria transação.
 REVIEW_COST = 5.0
 
+# Custos de revisão testados na análise de sensibilidade.
+SENSITIVITY_REVIEW_COSTS = (1, 5, 25, 100, 500)
+
 # Faixas de risco operacionais (limites inferiores de cada faixa).
 RISK_BINS = [0.0, 0.40, 0.70, 0.90]
 RISK_LABELS = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]

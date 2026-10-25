@@ -32,6 +32,14 @@ def test_selected_model_beats_trivial_baseline(chosen_and_split):
     assert result["ranking"]["pr_auc"] > 0.3
 
 
+def test_sensitivity_is_part_of_the_test_evaluation(chosen_and_split):
+    chosen, _, X_test, _, y_test = chosen_and_split
+    rows = evaluate_on_test(chosen, X_test, y_test, n_boot=20, sensitivity_costs=(1, 50))[
+        "sensitivity"
+    ]
+    assert [r["review_cost"] for r in rows] == [1.0, 50.0]
+
+
 def test_cost_never_worse_than_doing_nothing(chosen_and_split):
     chosen, _, X_test, _, y_test = chosen_and_split
     cost = evaluate_on_test(chosen, X_test, y_test, n_boot=20)["cost"]
@@ -53,7 +61,12 @@ def test_run_writes_all_artifacts(raw_df, tmp_path):
     reports = tmp_path / "reports"
     for name in ("final_metrics.json", "cv_comparison.csv", "results.md"):
         assert (reports / name).exists(), name
-    for fig in ("v2_pr_curves_oof.png", "v2_confusion_matrix.png", "v2_cost_curve.png"):
+    for fig in (
+        "v2_pr_curves_oof.png",
+        "v2_confusion_matrix.png",
+        "v2_cost_curve.png",
+        "v2_sensitivity.png",
+    ):
         assert (reports / "figures" / fig).exists(), fig
 
     saved = joblib.load(tmp_path / "models" / "final_model.joblib")
@@ -61,4 +74,7 @@ def test_run_writes_all_artifacts(raw_df, tmp_path):
 
     on_disk = json.loads((reports / "final_metrics.json").read_text(encoding="utf-8"))
     assert on_disk["selected_model"] == summary["selected_model"]
-    assert "Resultados" in (reports / "results.md").read_text(encoding="utf-8")
+    results_md = (reports / "results.md").read_text(encoding="utf-8")
+    assert "Resultados" in results_md
+    assert "Sensibilidade ao custo de revisão" in results_md
+    assert len(on_disk["sensitivity"]) == len(summary["sensitivity"]) > 0

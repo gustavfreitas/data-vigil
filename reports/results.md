@@ -37,6 +37,18 @@ Premissa: revisar um alerta custa 5,00; uma fraude não detectada custa o valor 
 | Modelo, threshold máx. F1 | 4.537 |
 | Modelo, threshold mín. custo | 4.568 |
 
+## Sensibilidade ao custo de revisão (no teste)
+
+Para cada custo de revisão, o threshold de custo é reescolhido só com o treino; o teste apenas mede. O threshold de máx. F1 ignora custos.
+
+| Custo de revisão | Threshold (custo) | Alertas | Fraudes pegas | Custo (thr. custo) | Custo (thr. F1) | Economia vs. não sinalizar |
+|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 0,000 | 1994 | 127 | 4.149 | 4.057 | 79,1% |
+| 5 | 0,187 | 127 | 109 | 4.568 | 4.537 | 77,0% |
+| 25 | 0,638 | 115 | 108 | 6.812 | 6.937 | 65,7% |
+| 100 | 1,000 | 21 | 21 | 20.393 | 15.937 | -2,6% |
+| 500 | 1,000 | 3 | 3 | 20.948 | 63.937 | -5,4% |
+
 ## Faixas de risco (no teste)
 
 | Faixa | Transações |

@@ -6,6 +6,7 @@ from src.evaluation import (
     best_threshold_f1,
     bootstrap_ci,
     classification_metrics,
+    review_cost_sensitivity,
     risk_band,
     total_cost,
 )
@@ -81,3 +82,38 @@ def test_bootstrap_ci_is_ordered_and_reproducible():
     assert first == second
     for low, high in first.values():
         assert low <= high
+
+
+def _synthetic_scores(seed=3, n=4000):
+    rng = np.random.default_rng(seed)
+    y = (rng.random(n) < 0.05).astype(int)
+    probs = np.clip(0.15 + y * 0.5 + rng.normal(0, 0.2, n), 0, 1)
+    amounts = rng.gamma(2.0, 50.0, n)
+    return y, probs, amounts
+
+
+def test_higher_review_cost_never_flags_more():
+    """Revisar fica mais caro => o threshold ótimo só sobe e os alertas só diminuem."""
+    y, probs, amounts = _synthetic_scores()
+    thresholds, alerts = [], []
+    for review_cost in (0.5, 5, 50, 500, 5000):
+        thr, _ = best_threshold_cost(y, probs, amounts, review_cost)
+        thresholds.append(thr)
+        alerts.append(int((probs >= thr).sum()))
+    assert thresholds == sorted(thresholds)
+    assert alerts == sorted(alerts, reverse=True)
+
+
+def test_review_cost_sensitivity_rows():
+    y, probs, amounts = _synthetic_scores()
+    y_test, probs_test, amounts_test = _synthetic_scores(seed=4)
+    rows = review_cost_sensitivity(
+        probs, y, amounts, probs_test, y_test, amounts_test,
+        threshold_f1=0.5, review_costs=(1, 10, 1000),
+    )
+    assert [r["review_cost"] for r in rows] == [1.0, 10.0, 1000.0]
+    for r in rows:
+        assert r["alerts"] >= r["frauds_caught"] >= 0
+        assert r["saving_vs_nothing"] <= 1.0
+    # com revisão muito cara, sinalizar quase nada é o esperado
+    assert rows[-1]["alerts"] <= rows[0]["alerts"]

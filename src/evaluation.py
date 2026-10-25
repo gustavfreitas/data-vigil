@@ -136,6 +136,45 @@ def cost_curve(y, probs, amounts, review_cost: float = REVIEW_COST, n_points: in
     return thresholds, np.array(costs)
 
 
+def review_cost_sensitivity(
+    oof_train, y_train, amounts_train, probs_test, y_test, amounts_test, threshold_f1, review_costs
+) -> list:
+    """Como o threshold ótimo e o custo mudam conforme o custo de revisar um alerta.
+
+    Para cada custo de revisão, o threshold é REESCOLHIDO só com o treino
+    (probabilidades out-of-fold); o teste apenas mede. Compara com o threshold
+    de máx. F1, que ignora custos.
+    """
+    y_test = np.asarray(y_test)
+    probs_test = np.asarray(probs_test)
+    amounts_test = np.asarray(amounts_test, dtype=float)
+    cost_flag_nothing = float(amounts_test[y_test == 1].sum())
+
+    rows = []
+    for review_cost in review_costs:
+        threshold, _ = best_threshold_cost(y_train, oof_train, amounts_train, review_cost)
+        m = classification_metrics(y_test, probs_test, threshold)
+        cost_at_cost = total_cost(y_test, probs_test >= threshold, amounts_test, review_cost)
+        cost_at_f1 = total_cost(y_test, probs_test >= threshold_f1, amounts_test, review_cost)
+        rows.append(
+            {
+                "review_cost": float(review_cost),
+                "threshold_cost": threshold,
+                "alerts": m["tp"] + m["fp"],
+                "frauds_caught": m["tp"],
+                "precision": m["precision"],
+                "recall": m["recall"],
+                "cost_at_cost_threshold": cost_at_cost,
+                "cost_at_f1_threshold": cost_at_f1,
+                "cost_flag_nothing": cost_flag_nothing,
+                "saving_vs_nothing": (
+                    1 - cost_at_cost / cost_flag_nothing if cost_flag_nothing else 0.0
+                ),
+            }
+        )
+    return rows
+
+
 # ---------------------------------------------------------------------------
 # Incerteza e faixas de risco
 # ---------------------------------------------------------------------------

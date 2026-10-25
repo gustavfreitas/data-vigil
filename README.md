@@ -10,18 +10,74 @@ Sistema experimental de **detecção de anomalias em transações de cartão de 
 
 ## Resultados
 
-Os números da versão atual são **gerados pelo código** e ficam em [`reports/results.md`](reports/results.md) depois de rodar `python main.py` (veja [Como rodar](#como-rodar)). Eles seguem este protocolo:
+Tudo abaixo vem de `python main.py` (tabelas completas em [`reports/results.md`](reports/results.md)) e segue este protocolo:
 
 1. **Treino/teste separados antes de tudo** (70/30, estratificado, semente fixa).
 2. **Modelo e thresholds escolhidos só com o treino**, usando probabilidades *out-of-fold* (validação cruzada de 5 folds). O teste é usado **uma única vez**, para medir.
-3. **Três pontos de operação comparados**: threshold padrão (0,5), threshold que maximiza F1 e threshold que **minimiza o custo de negócio** (fraude não detectada custa o valor da transação; revisar um alerta custa um valor configurável).
-4. **Incerteza explícita**: intervalos de confiança por bootstrap. Com ~140 fraudes no teste, diferenças pequenas entre modelos não são conclusivas — o relatório diz isso.
+3. **Três pontos de operação comparados**: threshold padrão (0,5), threshold que maximiza F1 e threshold que **minimiza o custo de negócio** (fraude não detectada custa o valor da transação; revisar um alerta custa 5, uma premissa configurável).
+4. **Incerteza explícita**: intervalos de confiança por bootstrap. Com 142 fraudes no teste, diferenças pequenas entre modelos não são conclusivas.
 
 *Por que não comparar por acurácia: com ~0,17% de fraude no dataset, um modelo que sempre prevê "transação normal" acerta ~99,8% e é inútil. A métrica de seleção é a PR-AUC (Precision-Recall AUC), mais informativa que a ROC-AUC para classes extremamente raras.*
 
+### Resumo
+
+No teste (85.118 transações, 142 fraudes), com o **XGBoost** e o threshold de máx. F1 escolhido no treino (0,452):
+
+- **Pega 108 das 142 fraudes** (recall de 76,1%) com **120 alertas**, dos quais 90,0% são fraudes de verdade (precision).
+- **Reduz o custo total em cerca de 77%**: 4.537 contra 19.878 se nada fosse sinalizado (com revisão a 5 por alerta).
+- **Incerteza (IC 95%)**: precision 0,840–0,950, recall 0,686–0,825, F1 0,772–0,869. PR-AUC 0,810 (0,748–0,870) e ROC-AUC 0,976.
+
+### Seleção do modelo (validação cruzada no treino)
+
+| Modelo | PR-AUC (CV) | ROC-AUC (CV) |
+|---|---:|---:|
+| **XGBoost (baseline)** ✅ | **0,852** | 0,981 |
+| XGBoost (tuned) | 0,850 | 0,981 |
+| Random Forest | 0,827 | 0,971 |
+| Logistic Regression | 0,736 | 0,979 |
+
+O ajuste de hiperparâmetros (`GridSearchCV`) **não trouxe ganho**: o XGBoost com parâmetros padrão empata com o "tuned". O baseline linear tem ROC-AUC alta, mas PR-AUC bem menor, que é a métrica que pesa quando a classe positiva é rara.
+
+### Desempenho no teste
+
+| Threshold | Valor | Precision | Recall | F1 | Alertas | Fraudes pegas |
+|---|---:|---:|---:|---:|---:|---:|
+| Padrão (0,5) | 0,500 | 90,8% | 76,1% | 0,828 | 119 | 108 de 142 |
+| Máx. F1 (escolhido no treino) | 0,452 | 90,0% | 76,1% | 0,824 | 120 | 108 de 142 |
+| Mín. custo (escolhido no treino) | 0,187 | 85,8% | 76,8% | 0,810 | 127 | 109 de 142 |
+
+| Estratégia (custo de revisão = 5) | Custo total no teste |
+|---|---:|
+| Não sinalizar nada | 19.878 |
+| Sinalizar tudo | 425.590 |
+| Modelo, threshold máx. F1 | 4.537 |
+| Modelo, threshold mín. custo | 4.568 |
+
+![Curvas Precision-Recall](reports/figures/v2_pr_curves_oof.png)
+
+![Custo total vs. threshold](reports/figures/v2_cost_curve.png)
+
+### Como ler estes resultados
+
+- **O que é robusto**: o ganho de custo sobre "não sinalizar nada" é grande, e a ordem entre os modelos (árvores à frente do baseline linear em PR-AUC) aparece tanto na validação cruzada quanto no teste.
+- **O que não é conclusivo**: a diferença entre os três thresholds e a diferença entre XGBoost baseline e "tuned". Estão dentro dos intervalos de confiança. Com revisão a 5 por alerta, o threshold de custo (4.568) e o de F1 (4.537) são equivalentes na prática: a curva de custo é plana nessa região.
+- **Os intervalos são largos** porque o teste tem só 142 fraudes. Um recall de 76% pode, com igual plausibilidade, ser 69% ou 82%.
+
+### Sensibilidade ao custo de revisão
+
+O threshold por custo só se diferencia do threshold de F1 quando o custo de revisar um alerta muda bastante. Para mostrar isso, o pipeline reescolhe o threshold (sempre só com o treino) para custos de revisão de 1, 5, 25, 100 e 500 e mede cada um no teste. Quando revisar fica muito caro, o threshold ótimo sobe e o modelo passa a sinalizar menos; quando fica barato, ele aceita mais alertas para pegar mais fraudes. A tabela completa está em [`reports/results.md`](reports/results.md).
+
+![Sensibilidade ao custo de revisão](reports/figures/v2_sensitivity.png)
+
+### Explicabilidade (SHAP)
+
+![Importância das variáveis (SHAP)](reports/figures/v2_shap_importance.png)
+
+Os componentes que mais pesam são `V14`, `V4`, `V12`, `V10`, `V11` e `V3`; o valor da transação (`Amount_log`) aparece só em 9º e a hora (`Hour`) bem abaixo. Como `V1`–`V28` vêm de PCA e são anonimizadas, a explicação diz **quais componentes pesam**, mas não o significado de negócio de cada um. É uma limitação do dataset, não do método.
+
 ### Nota sobre a primeira versão (notebooks)
 
-Os notebooks `03` e `04` registram a primeira versão do experimento. Nela, o **threshold (0,96) e o modelo final foram escolhidos olhando o próprio conjunto de teste**, então a precisão de 97,2% e o recall de 73,9% daquela versão são otimistas. Além disso, a vantagem do XGBoost "tuned" sobre o baseline era de 0,814 contra 0,810 de PR-AUC, uma diferença dentro do ruído com 142 fraudes. Os notebooks continuam no repositório como registro exploratório; **a fonte de verdade agora é o código em `src/`**.
+Os notebooks `03` e `04` registram a primeira versão do experimento. Nela, o **threshold (0,96) e o modelo final foram escolhidos olhando o próprio conjunto de teste**, então a precisão de 97,2% e o recall de 73,9% daquela versão eram otimistas. Com o protocolo acima, o mesmo teste dá **90,0% de precision e 76,1% de recall**. A "vantagem" do XGBoost tuned (0,814 contra 0,810 de PR-AUC) também não se sustentou. Os notebooks continuam no repositório como registro exploratório; **a fonte de verdade agora é o código em `src/`**.
 
 | Modelo (v1, notebooks) | Precision | Recall | F1 | ROC-AUC | PR-AUC |
 |---|---:|---:|---:|---:|---:|

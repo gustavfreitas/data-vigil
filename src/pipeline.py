@@ -14,7 +14,14 @@ import joblib
 import pandas as pd
 from sklearn.base import clone
 
-from src.config import CV_FOLDS, MODELS_DIR, REPORTS_DIR, REVIEW_COST, SEED
+from src.config import (
+    CV_FOLDS,
+    MODELS_DIR,
+    REPORTS_DIR,
+    REVIEW_COST,
+    SEED,
+    SENSITIVITY_REVIEW_COSTS,
+)
 from src.data import amount_from_log, prepare
 from src.evaluation import (
     best_threshold_cost,
@@ -24,12 +31,19 @@ from src.evaluation import (
     compare_models,
     cost_curve,
     ranking_metrics,
+    review_cost_sensitivity,
     risk_band,
     total_cost,
 )
 from src.explain import shap_importance_plot
 from src.models import build_models, tune_xgboost
-from src.reporting import plot_confusion, plot_cost_curve, plot_pr_curves, render_results_md
+from src.reporting import (
+    plot_confusion,
+    plot_cost_curve,
+    plot_pr_curves,
+    plot_sensitivity,
+    render_results_md,
+)
 
 
 def fit_and_choose(
@@ -56,10 +70,22 @@ def fit_and_choose(
         "oof": oof,
         "threshold_f1": threshold_f1,
         "threshold_cost": threshold_cost,
+        # usados só na análise de sensibilidade (continuam sendo dados de TREINO)
+        "oof_selected": oof[selected],
+        "y_train": y_train,
+        "amounts_train": amounts_train,
     }
 
 
-def evaluate_on_test(chosen, X_test, y_test, review_cost=REVIEW_COST, n_boot=500, seed=SEED):
+def evaluate_on_test(
+    chosen,
+    X_test,
+    y_test,
+    review_cost=REVIEW_COST,
+    n_boot=500,
+    seed=SEED,
+    sensitivity_costs=SENSITIVITY_REVIEW_COSTS,
+):
     """Fase 2 — mede no teste as decisões da fase 1 (nada é reajustado aqui)."""
     probs = chosen["model"].predict_proba(X_test)[:, 1]
     amounts = amount_from_log(X_test["Amount_log"])
@@ -85,6 +111,16 @@ def evaluate_on_test(chosen, X_test, y_test, review_cost=REVIEW_COST, n_boot=500
         },
         "ci_at_f1": bootstrap_ci(y_test, probs, thr_f1, n_boot=n_boot, seed=seed),
         "risk_bands": risk_band(probs).value_counts().to_dict(),
+        "sensitivity": review_cost_sensitivity(
+            chosen["oof_selected"],
+            chosen["y_train"],
+            chosen["amounts_train"],
+            probs,
+            y_test,
+            amounts,
+            thr_f1,
+            sensitivity_costs,
+        ),
     }
 
 
@@ -140,6 +176,7 @@ def run(
         "cost": test["cost"],
         "ci_at_f1": test["ci_at_f1"],
         "risk_bands": test["risk_bands"],
+        "sensitivity": test["sensitivity"],
     }
 
     # --- artefatos -------------------------------------------------------
@@ -172,6 +209,8 @@ def run(
         baselines={"Não sinalizar nada": test["cost"]["flag_nothing"]},
         path=figures_dir / "v2_cost_curve.png",
     )
+    plot_sensitivity(test["sensitivity"], chosen["threshold_f1"],
+                     figures_dir / "v2_sensitivity.png")
     try:
         if shap_importance_plot(chosen["model"], X_test, figures_dir / "v2_shap_importance.png"):
             log("Gráfico SHAP salvo.")

@@ -67,6 +67,38 @@ def plot_cost_curve(thresholds, costs, marks: dict, baselines: dict, path: Path)
     plt.close(fig)
 
 
+def plot_sensitivity(rows: list, threshold_f1: float, path: Path) -> None:
+    """Como o threshold ótimo e o custo total mudam com o custo de revisar um alerta."""
+    review_costs = [r["review_cost"] for r in rows]
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4.5))
+
+    thresholds = [min(r["threshold_cost"], 1.0) for r in rows]
+    ax1.plot(review_costs, thresholds, marker="o", label="Threshold ótimo por custo")
+    ax1.axhline(threshold_f1, linestyle="--", color="gray", label="Threshold de máx. F1")
+    ax1.set_xscale("log")
+    ax1.set_ylim(0, 1.05)
+    ax1.set_xlabel("Custo de revisar um alerta (escala log)")
+    ax1.set_ylabel("Threshold")
+    ax1.set_title("Threshold ótimo vs. custo de revisão")
+    ax1.legend()
+
+    ax2.plot(review_costs, [r["cost_at_cost_threshold"] for r in rows], marker="o",
+             label="Threshold por custo")
+    ax2.plot(review_costs, [r["cost_at_f1_threshold"] for r in rows], marker="s",
+             label="Threshold de máx. F1")
+    ax2.plot(review_costs, [r["cost_flag_nothing"] for r in rows], linestyle="--",
+             color="gray", label="Não sinalizar nada")
+    ax2.set_xscale("log")
+    ax2.set_xlabel("Custo de revisar um alerta (escala log)")
+    ax2.set_ylabel("Custo total no teste")
+    ax2.set_title("Custo total por estratégia")
+    ax2.legend()
+
+    fig.tight_layout()
+    fig.savefig(path, dpi=110)
+    plt.close(fig)
+
+
 def _dec(value: float, digits: int = 3) -> str:
     """Número com vírgula decimal (formato brasileiro)."""
     return f"{value:.{digits}f}".replace(".", ",")
@@ -78,11 +110,39 @@ def _int(value) -> str:
 
 
 def _pct(value: float) -> str:
-    return _dec(100 * value, 1) + "%"
+    percent = 100 * value
+    if abs(percent) < 0.05:  # evita "-0,0%"
+        percent = 0.0
+    return _dec(percent, 1) + "%"
 
 
 def _ci(interval) -> str:
     return f"{_dec(interval[0])}–{_dec(interval[1])}"
+
+
+def _sensitivity_section(rows) -> list:
+    """Tabela de sensibilidade ao custo de revisão (vazia se o resumo não tiver a análise)."""
+    if not rows:
+        return []
+    lines = [
+        "## Sensibilidade ao custo de revisão (no teste)",
+        "",
+        "Para cada custo de revisão, o threshold de custo é reescolhido só com o treino; "
+        "o teste apenas mede. O threshold de máx. F1 ignora custos.",
+        "",
+        "| Custo de revisão | Threshold (custo) | Alertas | Fraudes pegas | Custo (thr. custo) "
+        "| Custo (thr. F1) | Economia vs. não sinalizar |",
+        "|---:|---:|---:|---:|---:|---:|---:|",
+    ]
+    for r in rows:
+        threshold = _dec(r["threshold_cost"]) if r["threshold_cost"] <= 1 else "não sinalizar"
+        lines.append(
+            f"| {_dec(r['review_cost'], 0)} | {threshold} | {r['alerts']} | {r['frauds_caught']} "
+            f"| {_int(r['cost_at_cost_threshold'])} | {_int(r['cost_at_f1_threshold'])} "
+            f"| {_pct(r['saving_vs_nothing'])} |"
+        )
+    lines.append("")
+    return lines
 
 
 def render_results_md(summary: dict) -> str:
@@ -147,6 +207,9 @@ def render_results_md(summary: dict) -> str:
         f"| Modelo, threshold máx. F1 | {_int(c['at_f1'])} |",
         f"| Modelo, threshold mín. custo | {_int(c['at_cost'])} |",
         "",
+    ]
+    lines += _sensitivity_section(summary.get("sensitivity"))
+    lines += [
         "## Faixas de risco (no teste)",
         "",
         "| Faixa | Transações |",
