@@ -1,0 +1,11 @@
+# Dependências mínimas para rodar o pipeline (src/), os testes e o lint.
+# É o que o CI instala — sem Jupyter e sem SHAP, para ser rápido.
+# Versões iguais às do requirements.txt.
+pandas==3.0.2
+numpy==2.4.4
+scikit-learn==1.8.0
+xgboost==3.4.1
+matplotlib==3.10.8
+joblib>=1.4
+pytest>=8
+ruff>=0.6

@@ -58,6 +58,8 @@ O `creditcard.csv` **não é versionado no Git** (está no `.gitignore`, e o `.g
 1. Baixe em: [Credit Card Fraud Detection — Kaggle](https://www.kaggle.com/mlg-ulb/creditcardfraud) (precisa de conta gratuita no Kaggle).
 2. Coloque o arquivo em `data/creditcard.csv` (não em `notebooks/` — os notebooks leem o caminho relativo `../data/creditcard.csv`).
 
+Alternativa automática: `python -m scripts.download_data` (veja o item 10 para configurar o token do Kaggle).
+
 ## 6. Registrar o kernel Jupyter (importante)
 
 Para o Jupyter/VS Code enxergarem o ambiente virtual como opção de kernel:
@@ -68,7 +70,15 @@ python -m ipykernel install --user --name data-vigil --display-name "Python (dat
 
 Ao abrir os notebooks, selecione o kernel **Python (data-vigil)**.
 
-## 7. Rodar os notebooks (na ordem)
+## 7. Rodar o pipeline
+
+```bash
+python main.py
+```
+
+Gera `models/final_model.joblib`, `reports/results.md`, `reports/final_metrics.json` e as figuras `reports/figures/v2_*.png`. Para conferir que o código está saudável (sem precisar do dataset): `pytest` e `ruff check .`.
+
+## 7b. Rodar os notebooks (opcional, na ordem)
 
 ```
 01_eda.ipynb → 02_preprocessing.ipynb → 03_modelagem.ipynb → 04_avaliacao.ipynb
@@ -97,5 +107,7 @@ Só relevante se você quiser automatizar o download do dataset em vez de baixar
 pip install kaggle
 kaggle datasets download -d mlg-ulb/creditcardfraud -p data/ --unzip
 ```
+
+Ou, com o token configurado, simplesmente: `python -m scripts.download_data`.
 
 Exige configurar um token de API do Kaggle (`~/.kaggle/kaggle.json`) — dispensável para rodar o projeto uma única vez.

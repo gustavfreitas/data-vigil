@@ -1,3 +1,5 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:4d81247edf1b08649dfb88f7971af0e658b09363c2729242b8079e8df61b4711
-size 257
+Modelo,Precision (fraude),Recall (fraude),F1 (fraude),ROC-AUC,PR-AUC
+XGBoost (tuned),0.872,0.768,0.816,0.966,0.814
+XGBoost (baseline),0.908,0.761,0.828,0.976,0.81
+Random Forest,0.876,0.746,0.806,0.945,0.808
+Logistic Regression,0.051,0.887,0.096,0.963,0.691

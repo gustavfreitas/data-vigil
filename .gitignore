@@ -1,1 +1,11 @@
 creditcard.csv
+
+# Python / ferramentas
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
+
+# Dados (nunca versionados)
+data/
