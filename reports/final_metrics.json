@@ -1,9 +1,109 @@
 {
-  "modelo_selecionado": "XGBoost (tuned)",
-  "threshold": 0.9613798260688782,
-  "precision": 0.9722222222222222,
-  "recall": 0.7394366197183099,
-  "f1": 0.8399999999995093,
-  "pr_auc": 0.814,
-  "roc_auc": 0.966
+  "selected_model": "XGBoost (baseline)",
+  "best_params_xgb": {
+    "learning_rate": 0.1,
+    "max_depth": 5,
+    "n_estimators": 200
+  },
+  "cv_folds": 5,
+  "data": {
+    "n_train": 198608,
+    "n_test": 85118,
+    "frauds_train": 331,
+    "frauds_test": 142
+  },
+  "cv_comparison": [
+    {
+      "Modelo": "XGBoost (baseline)",
+      "PR-AUC (CV)": 0.8522629532041972,
+      "ROC-AUC (CV)": 0.9807009745452542
+    },
+    {
+      "Modelo": "XGBoost (tuned)",
+      "PR-AUC (CV)": 0.8503956648043755,
+      "ROC-AUC (CV)": 0.9814360229997744
+    },
+    {
+      "Modelo": "Random Forest",
+      "PR-AUC (CV)": 0.8274061736021995,
+      "ROC-AUC (CV)": 0.9706679692072887
+    },
+    {
+      "Modelo": "Logistic Regression",
+      "PR-AUC (CV)": 0.7362068022613438,
+      "ROC-AUC (CV)": 0.9793930755756919
+    }
+  ],
+  "thresholds": {
+    "f1": 0.45209547877311707,
+    "cost": 0.186989888548851,
+    "default": 0.5
+  },
+  "test": {
+    "ranking": {
+      "pr_auc": 0.8097490641386494,
+      "roc_auc": 0.9759677380324122
+    },
+    "at_default": {
+      "threshold": 0.5,
+      "precision": 0.907563025210084,
+      "recall": 0.7605633802816901,
+      "f1": 0.8275862068965517,
+      "tp": 108,
+      "fp": 11,
+      "fn": 34,
+      "tn": 84965
+    },
+    "at_f1": {
+      "threshold": 0.45209547877311707,
+      "precision": 0.9,
+      "recall": 0.7605633802816901,
+      "f1": 0.8244274809160305,
+      "tp": 108,
+      "fp": 12,
+      "fn": 34,
+      "tn": 84964
+    },
+    "at_cost": {
+      "threshold": 0.186989888548851,
+      "precision": 0.8582677165354331,
+      "recall": 0.7676056338028169,
+      "f1": 0.8104089219330854,
+      "tp": 109,
+      "fp": 18,
+      "fn": 33,
+      "tn": 84958
+    }
+  },
+  "cost": {
+    "review_cost": 5.0,
+    "flag_nothing": 19877.880000000005,
+    "flag_everything": 425590.0,
+    "at_f1": 4536.67,
+    "at_cost": 4567.879999999999
+  },
+  "ci_at_f1": {
+    "precision": [
+      0.839658863831002,
+      0.95
+    ],
+    "recall": [
+      0.6858012820512821,
+      0.8248175182481752
+    ],
+    "f1": [
+      0.7720226398100385,
+      0.8694063545150501
+    ],
+    "pr_auc": [
+      0.7481645855888307,
+      0.8696508954274936
+    ]
+  },
+  "risk_bands": {
+    "LOW": 84997,
+    "CRITICAL": 110,
+    "MEDIUM": 7,
+    "HIGH": 4
+  }
 }
