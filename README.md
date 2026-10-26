@@ -188,7 +188,7 @@ pytest
 ruff check .
 ```
 
-A cada push e pull request, o GitHub Actions roda `ruff` e `pytest` em Python 3.11 e 3.12.
+A cada push e pull request, o GitHub Actions roda `ruff` e `pytest` em Python 3.12 e 3.13.
 
 ## Segurança e limitações
 

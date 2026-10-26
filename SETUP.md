@@ -6,12 +6,12 @@ Passo a passo para preparar a máquina **antes de clonar/rodar o repositório**,
 
 ## 1. Python — a versão certa (crítico)
 
-O projeto foi testado de ponta a ponta com **Python 3.12.3**. Recomendo instalar/usar essa versão (ou 3.11, também estável) em vez da 3.14 que aparecia no seu ambiente Windows anterior.
+O projeto foi testado de ponta a ponta com **Python 3.12.3**. Recomendo instalar/usar essa versão (ou 3.13; o 3.11 **não** funciona, porque o `xgboost` fixado exige 3.12 ou mais novo) em vez da 3.14 que aparecia no seu ambiente Windows anterior.
 
 **Por quê**: 3.14 é uma versão muito recente (lançada há poucos meses) — bibliotecas como XGBoost e SHAP costumam demorar a publicar builds totalmente validadas para versões novas do Python. Funcionou no seu caso, mas para um projeto de portfólio que outras pessoas vão clonar e rodar, uma versão amplamente suportada reduz o risco de alguém encontrar um erro de instalação que não é problema do *seu* código.
 
 ```bash
-python --version   # confirme 3.11.x ou 3.12.x
+python --version   # confirme 3.12.x ou 3.13.x
 ```
 
 Se não tiver, instale pelo [python.org](https://www.python.org/downloads/) ou via `pyenv`/Microsoft Store (Windows).
