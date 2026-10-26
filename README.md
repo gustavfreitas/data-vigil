@@ -65,9 +65,23 @@ O ajuste de hiperparâmetros (`GridSearchCV`) **não trouxe ganho**: o XGBoost c
 
 ### Sensibilidade ao custo de revisão
 
-O threshold por custo só se diferencia do threshold de F1 quando o custo de revisar um alerta muda bastante. Para mostrar isso, o pipeline reescolhe o threshold (sempre só com o treino) para custos de revisão de 1, 5, 25, 100 e 500 e mede cada um no teste. Quando revisar fica muito caro, o threshold ótimo sobe e o modelo passa a sinalizar menos; quando fica barato, ele aceita mais alertas para pegar mais fraudes. A tabela completa está em [`reports/results.md`](reports/results.md).
+O pipeline reescolhe o threshold por custo (sempre só com o treino) para custos de revisão de 1, 5, 25, 100 e 500 e mede cada um no teste. A fraude média no teste vale cerca de 140, e esse número ajuda a ler a tabela.
+
+| Custo de revisão | Threshold (custo) | Alertas | Fraudes pegas | Custo (thr. custo) | Custo (thr. F1) | Economia vs. não sinalizar |
+|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 0,000 | 1.994 | 127 | 4.149 | 4.057 | 79,1% |
+| 5 | 0,187 | 127 | 109 | 4.568 | 4.537 | 77,0% |
+| 25 | 0,638 | 115 | 108 | 6.812 | 6.937 | 65,7% |
+| 100 | 1,000 | 21 | 21 | 20.393 | 15.937 | -2,6% |
+| 500 | 1,000 | 3 | 3 | 20.948 | 63.937 | -5,4% |
 
 ![Sensibilidade ao custo de revisão](reports/figures/v2_sensitivity.png)
+
+O que a tabela mostra:
+
+- **Com revisão barata ou moderada (1 a 25), o modelo vale muito**: economiza entre 66% e 79% do custo. Nessa faixa, o threshold por custo e o de F1 ficam a poucos por cento um do outro, então escolher um ou outro muda pouco.
+- **Perto do valor médio de uma fraude (revisão a 100), o ganho encolhe.** Revisar um alerta só compensa quando a chance de ele ser fraude, vezes o valor médio da fraude, passa do custo da revisão. Com revisão a 100 e fraude média de 140, o threshold de F1 ainda economiza cerca de 20%, mas o threshold escolhido por custo já não bate "não sinalizar nada". Com revisão a 500, nenhuma das duas estratégias bate.
+- **Escolher o threshold por custo no treino não garante um custo menor no teste.** Ele ganhou do threshold de F1 em dois dos cinco cenários: revisão a 25 (por cerca de 2%) e a 500, onde só "ganhou" por sinalizar poucos alertas, e ainda assim perdeu para não sinalizar nada. Nos extremos (revisão a 1 ou a 100), o corte escolhido no treino ficou em valores muito baixos ou muito altos, apoiado em poucos casos, e generalizou pior (revisão a 100 chegou a custar 2,6% a mais do que não sinalizar nada). Para usar isso de verdade, valeria suavizar a escolha (por exemplo, exigir uma melhoria mínima sobre o threshold de F1) ou ter mais fraudes para estimar.
 
 ### Explicabilidade (SHAP)
 
